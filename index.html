@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Support</title>
+    <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap/dist/css/bootstrap.css"/>
+    <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css"/>
+    <script src="//unpkg.com/vue@latest/dist/vue.js"></script>
+    <script src="//unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script>
+    <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue-icons.min.js"></script>
+    <script src="../../libraries/js/test_component.js"></script>
+    <script src="../../libraries/js/vue_js_component_filtered_select.js"></script>
+    <script src="../../libraries/js/vue_js_component_2_multiselect_wuth_show_result.js"></script>
+</head>
+<body style="background-color: whitesmoke; min-width: 1200px;">
+    <div id="it_support_form">
+        <b-container style="position: fixed; top: 75px; left: 20%; right:20%; background-color: rgb(238, 227, 125); width: 1200px; height: 800px;  box-shadow: 0 0 10px rgba(0,0,0,0.5)">
+            
+            <div>
+                <div id="header" class="mt-3">
+                    <b-button-group>
+                        <b-button variant="light" v-on:click="changeLanguage('ru')" >{{buttonRu}}</b-button>
+                        <b-button variant="secondary" v-on:click="changeLanguage('pl')">{{buttonPl}}</b-button>
+                    </b-button-group>
+                    <span style="margin-left: 20px;" >{{ title }}</span>
+                </div>
+                <div>
+                    <b-form-group label-cols-lg="3" v-bind:label="subject.title" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                        <b-form-select class="col-md-11" v-model="subject.select.selected" :options="subject.select.options" v-on:change="changeSubject()"></b-form-select>
+                    </b-form-group>
+                </div>
+                <div v-if="ifTypeAppeal">
+                    <b-form-group label-cols-lg="3" v-bind:label="typeAppeal.title" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                        <b-form-select class="col-md-11" v-model="typeAppeal.select.selected" :options="typeAppeal.select.options" v-on:change="changeAppeal()"></b-form-select>
+                    </b-form-group>
+                    <b-button v-b-modal.how_detect variant="link">{{typeAppeal.titlePopOver}}</b-button>
+                    <b-modal id="how_detect" scrollable title="Scrollable Content">
+                        <ul>
+                            <li v-for="item in typeAppeal.popOver">
+                                {{item}}
+                            </li>
+                        </ul>
+                    </b-modal>
+                </div>
+            </div>
+
+            <div v-if="ifSelectSubject && ( ifAppealChange || ifNewUserAddRequest || ifRigthAccess )">
+                <p>{{importantInfo}}</p>
+            </div>
+
+            <div v-if="ifSelectSubject && ifAppealAccess">
+                <b-form-group label-cols-lg="3" v-bind:label="rulesRequest.yourCompany.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-select class="col-md-11" v-model="rulesRequest.yourCompany.select.selected" :options="rulesRequest.yourCompany.select.options" v-on:change="changeYourCompany()"></b-form-select>
+                </b-form-group>
+            </div>
+            
+            <div v-if="ifSelectSubject && ifAppealAccess && rulesRequest.yourCompany.select.selected">
+                <b-form-group label-cols-lg="3" v-bind:label="rulesRequest.yourDepartment.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-select class="col-md-11" v-model="rulesRequest.yourDepartment.select.selected" :options="rulesRequest.yourDepartment.select.options" v-on:change="changeYourDepartment()"></b-form-select>
+                </b-form-group>
+            </div>
+
+            <!--<div v-if="ifSelectSubject && ifAppealAccess && rulesRequest.yourCompany.select.selected && rulesRequest.yourDepartment.select.selected && rulesRequest.checkBoxModeChoiceRoles.selected=='manual_roles'">
+                <b-form-group label-cols-lg="3" v-bind:label="rulesRequest.userRole.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-select class="col-md-11" v-model="rulesRequest.userRole.select.selected" :options="rulesRequest.userRole.select.options"></b-form-select>
+                </b-form-group>
+            </div> -->
+
+            <div v-if="ifNewUserAddRequest">
+                <b-form-group label-cols-lg="3" v-bind:label="rulesRequest.stimCompanies.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-select class="col-md-11" v-model="newUser.company.select.selected" :options="newUser.company.select.options"></b-form-select>
+                </b-form-group>
+            </div>
+
+            <div v-if="ifNewUserAddRequest">
+                <b-form-group label-cols-lg="3" v-bind:label="newUser.department.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-select class="col-md-11" v-model="newUser.department.select.selected" :options="newUser.department.select.options"></b-form-select>
+                </b-form-group>
+            </div>
+
+            <div v-if="ifNewUserAddRequest">
+                <b-form-group label-cols-lg="3" v-bind:label="newUser.position.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-select class="col-md-11" v-model="newUser.position.select.selected" :options="newUser.position.select.options"></b-form-select>
+                </b-form-group>
+            </div>
+
+            <div v-if="ifNewUserAddRequest">
+                <b-form-group label-cols-lg="4" v-bind:label="rulesRequest.userName.textForTag" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-input class="col-md-11" v-model="newUser.userName.value"></b-form-input>
+                </b-form-group>
+            </div>
+
+            <div v-if="ifNewUserAddRequest">
+                <b-form-group label-cols-lg="3" v-bind:label="newUser.postDomainName.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-input class="col-md-11" v-model="newUser.postDomainName.value"></b-form-input>
+                </b-form-group>
+            </div>
+
+            <div v-if="(ifSelectSubject && ifAppealAccess && rulesRequest.yourCompany.select.selected && rulesRequest.yourDepartment.select.selected) || ifNewUserAddRequest">
+                <b-form-group label-cols-lg="3" v-bind:label="rulesRequest.notes.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-textarea class="col-md-11" v-model="rulesRequest.notes.value" rows="3"></b-form-textarea>
+                </b-form-group>
+            </div>
+
+            <div v-if="ifSelectSubject && ifAppealAccess && rulesRequest.yourCompany.select.selected && rulesRequest.userName.show">
+                <b-form-group label-cols-lg="3" v-bind:label="rulesRequest.userName.textForTag" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-select class="col-md-11" v-model="rulesRequest.userName.select.selected" :options="rulesRequest.userName.select.options"></b-form-select>
+                </b-form-group>
+            </div>
+
+            <div v-if="ifSelectSubject && ifAppealAccess && rulesRequest.yourCompany.select.selected && rulesRequest.yourDepartment.select.selected">
+                <b-form-group label-cols-lg="5" v-bind:label="rulesRequest.checkBoxModeChoiceRoles.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" ></b-form-group>
+                <b-form-radio-group v-model="rulesRequest.checkBoxModeChoiceRoles.selected" :options="rulesRequest.checkBoxModeChoiceRoles.options" buttons></b-form-radio-group>
+            </div>
+
+
+            <!--<div v-if="ifSelectSubject && ifAppealAccess && rulesRequest.yourCompany.select.selected && rulesRequest.userName.show">
+                <b-form-group label-cols-lg="3" v-bind:label="rulesRequest.userName.textForTag" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <filteredselect v-bind:obj_for_select="rulesRequest.userName" v-on:data-select="saveChoisedUsers"></filteredselect>
+                </b-form-group>
+            </div>-->
+
+            <div v-if="ifSelectSubject && ifAppealAccess && rulesRequest.yourCompany.select.selected && rulesRequest.yourDepartment.select.selected && rulesRequest.checkBoxModeChoiceRoles.selected=='user_same_roles'">
+                <b-form-group label-cols-lg="3" v-bind:label="rulesRequest.userWithTheSameRole.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-select class="col-md-11" v-model="rulesRequest.userWithTheSameRole.select.selected" :options="rulesRequest.userWithTheSameRole.select.options"></b-form-select>
+                </b-form-group>
+            </div>
+
+            <div v-if="ifSelectSubject && ifAppealAccess && rulesRequest.yourCompany.select.selected && rulesRequest.userName.show && rulesRequest.checkBoxModeChoiceRoles.selected=='manual_roles'">
+                <b-form-group label-cols-lg="3" v-bind:label="rulesRequest.userRole.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <double-select-show v-bind:obj_params="dataForPopupRoles" v-on:data-select="saveDataFromPopupRoles"></double-select-show>
+                </b-form-group>
+            </div>
+
+            <div v-if="ifSelectSubject && ifAppealAccess && rulesRequest.yourCompany.select.selected && rulesRequest.yourDepartment.select.selected">
+                <b-form-group label-cols-lg="3" v-bind:label="rulesRequest.phone.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-input class="col-md-11" v-model="rulesRequest.phone.value" ></b-form-input>
+                </b-form-group>
+            </div>
+            
+
+            <div v-if="ifSelectSubject && ifMistake">
+                <b-form-group label-cols-lg="5" v-bind:label="mistake.meetBefore.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-radio-group
+                        id="btn-meet-before"
+                        v-model="mistake.meetBefore.selected"
+                        :options="mistake.meetBefore.options"
+                        name="btn-meet-before"
+                        buttons>
+                    </b-form-radio-group>
+                </b-form-group>
+            </div>
+
+            <div v-if="ifSelectSubject && ifFailure">
+                <b-form-group label-cols-lg="3" v-bind:label="failure.correctLastTime.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-datepicker id="datepicker" v-model="failure.correctLastTime.value" class="mb-2"  start-weekday="1" locale="ru-RU"></b-form-datepicker>
+                </b-form-group>
+            </div>          
+
+            <div v-if=" ifSelectSubject && ( ifAppealInfo || (ifListAvailableTypiesIsEmpty && !ifNewUserAddRequest ))">
+                    <b-form-group label-cols-lg="3" v-bind:label="yourQuestion.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                        <b-form-textarea class="col-md-11" v-model="yourQuestion.question" rows="4"></b-form-textarea>
+                    </b-form-group>
+            </div>
+
+            <div v-if="ifSelectSubject && ifAppealService">
+                <b-form-group label-cols-lg="3" v-bind:label="needExequte.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-textarea class="col-md-11" v-model="needExequte.value" rows="4"></b-form-textarea>
+                </b-form-group>
+                <b-form-group label-cols-lg="5" v-bind:label="yourLocation.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-textarea class="col-md-11" v-model="yourLocation.value" rows="1"></b-form-textarea>
+                </b-form-group>
+            </div>
+            
+            <!--<div v-if="ifSelectSubject && ( ifAppealChange || ifNewUserAddRequest )">
+                <p>{{importantInfo}}</p>
+            </div> -->
+
+            <div v-if="ifSelectSubject && ifAppealChange">
+                <b-form-group label-cols-lg="5" v-bind:label="requestDescription.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-textarea class="col-md-11" v-model="requestDescription.value" rows="4"></b-form-textarea>
+                </b-form-group>
+            </div>
+
+            <div v-if="ifSelectSubject && ifMistake">
+                <b-form-group label-cols-lg="5" v-bind:label="mistake.mistakeDescription.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-textarea class="col-md-11" v-model="mistake.mistakeDescription.value" rows="3"></b-form-textarea>
+                </b-form-group>
+            </div>
+            <div v-if="ifSelectSubject && ifMistake && mistake.meetBefore.selected=='meet-before-yes'">
+                <b-form-group label-cols-lg="5" v-bind:label="mistake.earlierSolvingProblem.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-textarea class="col-md-11" v-model="mistake.earlierSolvingProblem.value" rows="3"></b-form-textarea>
+                </b-form-group>
+            </div>
+            <div v-if="ifSelectSubject && ifMistake">
+                <b-form-group label-cols-lg="5" v-bind:label="mistake.instructionLink.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-input class="col-md-11" v-model="mistake.instructionLink.value" rows="1"></b-form-input>
+                </b-form-group>
+            </div>
+
+
+            <div v-if=" ifSelectSubject && ( ifAppealInfo || ifAppealChange )">
+                <b-form-group label-cols-lg="5" v-bind:label="objectLink.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-input class="col-md-11" v-model="objectLink.link" ></b-form-input>
+                    <b-link v-bind:href="objectLink.linkToInstruction" target="_blank">{{objectLink.linkToInstructionName}}</b-link>
+                </b-form-group>  
+            </div>
+
+            <div v-if="ifSelectSubject && ifFailure">
+                <b-form-group label-cols-lg="5" v-bind:label="failure.problemDescription.text" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-textarea class="col-md-11" v-model="failure.problemDescription.value" rows="4"></b-form-textarea>
+                </b-form-group>
+            </div>
+
+            <div v-if="ifSelectSubject && ifFooterShow && !ifNewUserAddRequest " id="get_file">
+                <label for="load-files">{{loadFiles.text}}</label>
+                <b-form-file id="load-files" v-bind:browse-text="loadFiles.buttonText" v-model="loadFiles.files"  size="md" multiple></b-form-file>
+            </div>
+
+            <div v-if="ifSelectSubject && ifFooterShow" id="footer">
+                <div>
+                    <span>{{footer.textInfoStr1}}</span><br>
+                    <span>{{footer.textInfoStr2}}</span>
+                </div>
+                <div>
+                    <b-button variant="light" v-on:click="sendDataToServer()" >{{footer.buttonCreateText}}</b-button>
+                    <b-button variant="light" v-on:click="formClear()" >{{footer.buttonClearText}}</b-button>
+                </div>
+            </div>
+        </b-container>
+    </div>
+    <script src="js/it_support_form.js"></script>
+</body>
+</html>
