@@ -1,5 +1,3 @@
-This is my last project.
-It is not finished yet.
 It is in stage beta testing and creating CSS styles and remaking html.
 
 Goal: make IT support servisedesk application bilded in CMS Bitrix, with use tasks, time counting execute  and other standat Bitrix facilites.
